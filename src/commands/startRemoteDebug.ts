@@ -69,7 +69,10 @@ export async function startRemoteDebug(tree: AzureTreeDataProvider, node: IAzure
         protocol: "inspector",
         request: 'attach',
         address: 'localhost',
-        port: portNumber
+        port: portNumber,
+        localRoot: vscode.workspace.rootPath,
+        remoteRoot: "/home/site/wwwroot",
+        trace: "verbose"
     });
 
     const terminateDebugListener: vscode.Disposable = vscode.debug.onDidTerminateDebugSession((event: vscode.DebugSession) => {
