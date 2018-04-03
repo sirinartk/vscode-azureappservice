@@ -115,6 +115,9 @@ export async function startRemoteDebug(tree: AzureTreeDataProvider, node: IAzure
                 terminateDebugListener.dispose();
             }
         });
+
+        // TODO: Give up after 60sec, if something blows up along the way.
+
     });
 
 }
