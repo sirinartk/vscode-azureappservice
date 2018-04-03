@@ -7,7 +7,7 @@ import { User } from 'azure-arm-website/lib/models';
 import * as EventEmitter from 'events';
 import { createServer, Server, Socket } from 'net';
 import { OutputChannel } from 'vscode';
-import { pingFunctionApp, SiteClient } from 'vscode-azureappservice';
+import { SiteClient } from 'vscode-azureappservice';
 import * as websocket from 'websocket';
 
 export class DebugProxy extends EventEmitter {
@@ -15,7 +15,6 @@ export class DebugProxy extends EventEmitter {
     private _client: SiteClient;
     private _port: number;
     private _publishCredential: User;
-    private _keepAlive: boolean;
     private _outputChannel: OutputChannel;
 
     constructor(outputChannel: OutputChannel, client: SiteClient, port: number, publishCredential: User) {
@@ -23,7 +22,6 @@ export class DebugProxy extends EventEmitter {
         this._client = client;
         this._port = port;
         this._publishCredential = publishCredential;
-        this._keepAlive = true;
         this._outputChannel = outputChannel;
         this._server = createServer();
     }
@@ -149,20 +147,6 @@ export class DebugProxy extends EventEmitter {
 
     public dispose(): void {
         this._server.close();
-
-        this._keepAlive = false;
     }
 
-    //keep querying the function app state, otherwise the connection will lose.
-    private async keepAlive(): Promise<void> {
-        if (this._keepAlive) {
-            try {
-                await pingFunctionApp(this._client);
-                setTimeout(this.keepAlive, 60 * 1000 /* 60 seconds */);
-            } catch (err) {
-                this._outputChannel.appendLine(`[Proxy Server] ${err}`);
-                setTimeout(this.keepAlive, 5 * 1000 /* 5 seconds */);
-            }
-        }
-    }
 }
