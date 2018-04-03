@@ -183,7 +183,7 @@
             },
             {
                 "command": "diagnostics.startRemoteDebug",
-                "title": "Start remote debugging on Azure",
+                "title": "Start Remote Debugging on Azure",
                 "category": "Azure App Service"
             },
             {
@@ -348,7 +348,7 @@
                 },
                 {
                     "command": "diagnostics.startRemoteDebug",
-                    "when": "view == azureAppService && viewItem == appService",
+                    "when": "config.appService.enableRemoteDebugging == true && view == azureAppService && viewItem == appService",
                     "group": "4_appServiceDiagnosticsCommands@3"
                 },
                 {
