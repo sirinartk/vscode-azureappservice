@@ -537,6 +537,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show prompt to improve performance of Zip Deploy by excluding build artifacts from the zip file and running a build during deployment."
+                },
+                "appService.enableRemoteDebugging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables remote debugging of App Service (Node only for now)"
                 }
             }
         },
