@@ -13,6 +13,8 @@ import { DebugProxy } from '../diagnostics/DebugProxy';
 import { SiteTreeItem } from '../explorer/SiteTreeItem';
 import { WebAppTreeItem } from '../explorer/WebAppTreeItem';
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function startRemoteDebug(tree: AzureTreeDataProvider, node: IAzureNode<SiteTreeItem>, outputChannel: vscode.OutputChannel): Promise<void> {
     if (!node) {
         node = <IAzureNode<WebAppTreeItem>>await tree.showNodePicker(WebAppTreeItem.contextValue);
@@ -53,27 +55,30 @@ export async function startRemoteDebug(tree: AzureTreeDataProvider, node: IAzure
 
         // Use or update App Settings
         await new Promise(async (resolve: () => void, reject: (e: any) => void): Promise<void> => {
-            try {
-                const appSettings: StringDictionary = await client.listApplicationSettings();
+            const isEnabled = await isRemoteDebuggingEnabled(debugRemotePort, client);
 
-                // SET APPSVC_TUNNEL_PORT + REMOTE DEBUGGING ENABLED
-                if (needUpdateAppSettings(debugRemotePort, appSettings)) {
-                    const confirmMsg: string = 'We need to enable remote debugging for the selected app. Would you like to continue?';
-                    const result: vscode.MessageItem = await vscode.window.showWarningMessage(confirmMsg, DialogResponses.yes, DialogResponses.learnMore, DialogResponses.cancel);
-                    if (result === DialogResponses.learnMore) {
-                        // tslint:disable-next-line:no-unsafe-any
-                        opn('https://aka.ms/');
-                        reject('');
-                    } else {
-                        await updateAppSettings(debugRemotePort, outputChannel, client, p, appSettings);
-                        resolve();
-                    }
+            if (isEnabled) {
+                // All good
+                resolve();
+            } else {
+                const confirmMsg: string = 'We need to enable remote debugging for the selected app. Would you like to continue?';
+                const result: vscode.MessageItem = await vscode.window.showWarningMessage(confirmMsg, DialogResponses.yes, DialogResponses.learnMore, DialogResponses.cancel);
+                if (result === DialogResponses.learnMore) {
+                    opn('https://aka.ms/');
+                    reject('');
                 } else {
-                    // All good, resolve
+                    p.report({ message: 'Updating application settings to enable remote debugging...' });
+                    outputChannel.appendLine('Updating application settings to enable remote debugging...');
+                    await updateAppSettings(debugRemotePort, client);
+
+                    p.report({ message: 'Waiting for 60sec to let app reboot...' });
+                    outputChannel.appendLine('Waiting for 60sec to let app reboot...');
+
+                    // TODO: Get rid of hard-coded timeout and enable polling of app settings to make sure the setting is applied.
+                    await delay(60000)
+
                     resolve();
                 }
-            } catch (error) {
-                reject(error);
             }
         });
 
@@ -114,19 +119,19 @@ export async function startRemoteDebug(tree: AzureTreeDataProvider, node: IAzure
 
 }
 
-async function updateAppSettings(debugPort: Number, outputChannel: vscode.OutputChannel, client: SiteClient, p: vscode.Progress<{}>, appSettings: StringDictionary): Promise<void> {
-
-    appSettings.properties.APPSVC_TUNNEL_PORT = String(debugPort);
-    p.report({ message: 'Updating application settings to enable remote debugging...' });
-    outputChannel.appendLine('Updating application settings to enable remote debugging...');
-
-    await client.updateApplicationSettings(appSettings);
-    p.report({ message: 'Updating application settings done...' });
-    outputChannel.appendLine('Updating application settings done...');
-
+async function isRemoteDebuggingEnabled(debugPort: Number, client: SiteClient): Promise<Boolean> {
+    const appSettings: StringDictionary = await client.listApplicationSettings();
+    if (appSettings.properties && appSettings.properties['APPSVC_TUNNEL_PORT'] === String(debugPort)) {
+        // All good
+        return true;
+    } else {
+        return false;
+    }
 }
 
-function needUpdateAppSettings(debugRemotePort: Number, appSettings: StringDictionary): boolean | undefined {
-    // tslint:disable-next-line:no-string-literal
-    return appSettings.properties && appSettings.properties['APPSVC_TUNNEL_PORT'] !== String(debugRemotePort);
+async function updateAppSettings(debugPort: Number, client: SiteClient): Promise<void> {
+    const appSettings: StringDictionary = await client.listApplicationSettings();
+
+    appSettings.properties.APPSVC_TUNNEL_PORT = String(debugPort);
+    await client.updateApplicationSettings(appSettings);
 }
