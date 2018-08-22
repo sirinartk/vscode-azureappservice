@@ -52,7 +52,11 @@
         "onCommand:appService.StartRemoteDebug",
         "onCommand:appService.DisableRemoteDebug",
         "onCommand:appService.CreateSlot",
-        "onView:azureAppService"
+        "onCommand:appService.ViewRemoteFiles",
+        "onCommand:appService.ViewRemoteLogs",
+        "onView:azureAppService",
+        "onFileSystem:appService",
+        "onFileSystem:appServiceRO"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -210,6 +214,16 @@
             {
                 "command": "appService.ScaleUp",
                 "title": "Scale up App Service Plan...",
+                "category": "Azure App Service"
+            },
+            {
+                "command": "appService.ViewRemoteFiles",
+                "title": "View Remote Files...",
+                "category": "Azure App Service"
+            },
+            {
+                "command": "appService.ViewRemoteLogs",
+                "title": "View Remote Logs...",
                 "category": "Azure App Service"
             }
         ],
@@ -498,6 +512,16 @@
                     "group": "1_folderGeneralCommands@1"
                 },
                 {
+                    "command": "appService.ViewRemoteFiles",
+                    "when": "view == azureAppService && viewItem == folder",
+                    "group": "2_folderGeneralCommands@1"
+                },
+                {
+                    "command": "appService.ViewRemoteLogs",
+                    "when": "view == azureAppService && viewItem == folder",
+                    "group": "2_folderGeneralCommands@2"
+                },
+                {
                     "command": "appService.OpenInPortal",
                     "when": "view == azureAppService && viewItem == webJobs",
                     "group": "1_webJobsGeneralCommands@1"
@@ -735,9 +759,9 @@
         "portfinder": "^1.0.13",
         "request": "^2.83.0",
         "request-promise": "^4.2.2",
-        "vscode-azureappservice": "^0.19.1",
+        "vscode-azureappservice": "^0.19.2",
         "vscode-azureextensionui": "^0.16.5",
-        "vscode-azurekudu": "^0.1.8",
+        "vscode-azurekudu": "^0.1.9",
         "vscode-debugadapter": "^1.24.0",
         "vscode-debugprotocol": "^1.24.0",
         "vscode-extension-telemetry": "^0.0.18"

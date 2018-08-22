@@ -5,20 +5,19 @@
 
 'use strict';
 
-import { extname } from 'path';
+import { SiteConfigResource } from 'azure-arm-website/lib/models';
 import * as vscode from 'vscode';
-import { AppSettingsTreeItem, AppSettingTreeItem, editScmType, getFile, IFileResult, registerAppServiceExtensionVariables } from 'vscode-azureappservice';
-import { AzureTreeDataProvider, AzureUserInput, IActionContext, IAzureNode, IAzureParentNode, IAzureUserInput, registerCommand, registerEvent, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AppSettingsTreeItem, AppSettingTreeItem, editScmType, registerAppServiceExtensionVariables } from 'vscode-azureappservice';
+import { AzureTreeDataProvider, AzureUserInput, IActionContext, IAzureNode, IAzureParentNode, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import TelemetryReporter from 'vscode-extension-telemetry';
-import { SiteConfigResource } from '../node_modules/azure-arm-website/lib/models';
+import { AppServiceFS } from './AppServiceFS';
 import { deploy } from './commands/deploy';
 import { disableRemoteDebug } from './commands/remoteDebug/disableRemoteDebug';
 import { startRemoteDebug } from './commands/remoteDebug/startRemoteDebug';
 import { swapSlots } from './commands/swapSlots';
 import { DeploymentSlotsNATreeItem, DeploymentSlotsTreeItem, ScaleUpTreeItem } from './explorer/DeploymentSlotsTreeItem';
 import { DeploymentSlotTreeItem } from './explorer/DeploymentSlotTreeItem';
-import { FileEditor } from './explorer/editors/FileEditor';
-import { FileTreeItem } from './explorer/FileTreeItem';
+import { FolderTreeItem } from './explorer/FolderTreeItem';
 import { LoadedScriptsProvider, openScript } from './explorer/loadedScriptsExplorer';
 import { SiteTreeItem } from './explorer/SiteTreeItem';
 import { WebAppProvider } from './explorer/WebAppProvider';
@@ -37,6 +36,9 @@ export function activate(context: vscode.ExtensionContext): void {
     registerAppServiceExtensionVariables(ext);
     ext.context = context;
 
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider('appService', new AppServiceFS(false /* readonly */), {}));
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider('appServiceRO', new AppServiceFS(true /* readonly */), {}));
+
     const packageInfo: IPackageInfo | undefined = getPackageInfo(context);
     if (packageInfo) {
         ext.reporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
@@ -54,9 +56,6 @@ export function activate(context: vscode.ExtensionContext): void {
     ext.tree = tree;
     context.subscriptions.push(tree);
     context.subscriptions.push(vscode.window.registerTreeDataProvider('azureAppService', tree));
-
-    const fileEditor: FileEditor = new FileEditor();
-    context.subscriptions.push(fileEditor);
 
     // loaded scripts
     const provider = new LoadedScriptsProvider(context);
@@ -314,28 +313,32 @@ export function activate(context: vscode.ExtensionContext): void {
 
     registerCommand('appService.StartRemoteDebug', async (node?: IAzureNode<SiteTreeItem>) => startRemoteDebug(node));
     registerCommand('appService.DisableRemoteDebug', async (node?: IAzureNode<SiteTreeItem>) => disableRemoteDebug(node));
-
-    registerCommand('appService.showFile', async (node: IAzureNode<FileTreeItem>) => {
-        const logFiles: string = 'LogFiles/';
-        // we don't want to let users save log files, so rather than using the FileEditor, just open an untitled document
-        if (node.treeItem.path.startsWith(logFiles)) {
-            const file: IFileResult = await getFile(node.treeItem.client, node.treeItem.path);
-            const document: vscode.TextDocument = await vscode.workspace.openTextDocument({
-                language: extname(node.treeItem.path).substring(1), // remove the prepending dot of the ext
-                content: file.data
-            });
-            await vscode.window.showTextDocument(document);
-        } else {
-            await fileEditor.showEditor(node);
-        }
-    });
     registerCommand('appService.ScaleUp', async (node: IAzureNode<DeploymentSlotsNATreeItem | ScaleUpTreeItem>) => {
         node.openInPortal(node.treeItem.scaleUpId);
     });
-
-    registerEvent('appService.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await fileEditor.onDidSaveTextDocument(this, context.globalState, doc); });
+    registerCommand('appService.ViewRemoteFiles', async (node: IAzureNode<FolderTreeItem>) => {
+        await openAsWorkspace(node);
+    });
+    registerCommand('appService.ViewRemoteLogs', async (node: IAzureNode<FolderTreeItem>) => {
+        await openAsWorkspace(node);
+    });
 }
 
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {
+}
+
+async function openAsWorkspace(node: IAzureNode<FolderTreeItem>): Promise<void> {
+    const message: string = "View files as read-only or editable workspace? If you select 'editable', any change you make will persist to Azure.";
+    const editable: vscode.MessageItem = { title: 'Editable' };
+    const readOnly: vscode.MessageItem = { title: 'Read-only' };
+    const result: vscode.MessageItem = await ext.ui.showWarningMessage(message, { modal: true }, readOnly, editable);
+    let scheme: string;
+    if (result === editable) {
+        scheme = 'appService';
+    } else {
+        scheme = 'appServiceRO';
+    }
+
+    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.parse(`${scheme}:${node.id}`), true /* forceNewWindow */);
 }
