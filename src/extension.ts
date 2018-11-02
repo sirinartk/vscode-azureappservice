@@ -9,9 +9,10 @@ import * as opn from 'opn';
 import { extname } from 'path';
 import * as vscode from 'vscode';
 import { AppSettingsTreeItem, AppSettingTreeItem, editScmType, getFile, IFileResult, registerAppServiceExtensionVariables, SiteClient, stopStreamingLogs } from 'vscode-azureappservice';
-import { AzureParentTreeItem, AzureTreeDataProvider, AzureTreeItem, AzureUserInput, createTelemetryReporter, IActionContext, IAzureUserInput, registerCommand, registerEvent, registerUIExtensionVariables, SubscriptionTreeItem } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeDataProvider, AzureTreeItem, AzureUserInput, createTelemetryReporter, DialogResponses, IActionContext, IAzureUserInput, registerCommand, registerEvent, registerUIExtensionVariables, SubscriptionTreeItem } from 'vscode-azureextensionui';
 import { SiteConfigResource } from '../node_modules/azure-arm-website/lib/models';
 import { addCosmosDBConnection } from './commands/connections/addCosmosDBConnection';
+import { attachCosmosDBDatabase } from './commands/connections/attachCosmosDBDatabase';
 import { removeCosmosDBConnection } from './commands/connections/removeCosmosDBConnection';
 import { deploy } from './commands/deploy';
 import { enableFileLogging } from './commands/enableFileLogging';
@@ -316,8 +317,21 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     });
     registerCommand('appService.AddCosmosDBConnection', addCosmosDBConnection);
+    registerCommand('appService.AttachCosmosDBDatabase', attachCosmosDBDatabase);
     registerCommand('appService.RemoveCosmosDBConnection', removeCosmosDBConnection);
-    registerCommand('appService.RevealConnection', async (node: CosmosDBConnection) => await ext.cosmosAPI.revealTreeItem(node.cosmosDBDatabase.treeItemId));
+    registerCommand('appService.RevealConnection', async (node: CosmosDBConnection) => {
+        const revealed = await ext.cosmosAPI.revealTreeItem(node.cosmosDBDatabase.treeItemId);
+        if (!revealed) {
+            const error: string = `Can't find this database in CosmosDB. Do you want to attach it?`;
+            const result = await vscode.window.showWarningMessage(error, DialogResponses.yes, DialogResponses.no);
+            if (result === DialogResponses.yes) {
+                await node.attachToCosmos();
+                if (!(await ext.cosmosAPI.revealTreeItem(node.cosmosDBDatabase.treeItemId))) {
+                    throw new Error(node.cosmosDBDatabase.accountName);
+                }
+            }
+        }
+    });
 }
 
 // tslint:disable-next-line:no-empty

@@ -17,7 +17,7 @@ export class CosmosDBConnection extends AzureTreeItem<ISiteTreeRoot> {
     public readonly label: string;
     public readonly parent: CosmosDBTreeItem;
 
-    constructor(parent: CosmosDBTreeItem, readonly cosmosDBDatabase: CosmosDBDatabase, readonly appSettingName: string) {
+    constructor(parent: CosmosDBTreeItem, readonly cosmosDBDatabase: CosmosDBDatabase, readonly appSettingKey: string) {
         super(parent);
         this.label = `${cosmosDBDatabase.accountName}${cosmosDBDatabase.databaseName ? '/'.concat(cosmosDBDatabase.databaseName) : ''}`;
     }
@@ -59,5 +59,12 @@ export class CosmosDBConnection extends AzureTreeItem<ISiteTreeRoot> {
         appSettings.properties = propertiesToSave;
         await this.root.client.updateApplicationSettings(appSettings);
         await this.parent.parent.parent.appSettingsNode.refresh();
+    }
+
+    public async attachToCosmos(): Promise<void> {
+        const cosmosDBDatabase = await ext.cosmosAPI.attachDatabase({ connectionString: this.cosmosDBDatabase.connectionString });
+        if (cosmosDBDatabase) {
+            this.cosmosDBDatabase.treeItemId = cosmosDBDatabase.treeItemId;
+        }
     }
 }

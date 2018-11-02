@@ -52,8 +52,12 @@ export class CosmosDBTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             }
         });
 
+        const filteredAppSettingsKeys = mongoAppSettingsKeys.filter((item, pos) => {
+            return mongoAppSettingsKeys.indexOf(item) === pos;
+        });
+
         const treeItems: CosmosDBConnection[] = [];
-        for (const key of mongoAppSettingsKeys) {
+        for (const key of filteredAppSettingsKeys) {
             const cosmosDBDatabase = await ext.cosmosAPI.getDatabase({ connectionString: appSettings[key] });
             if (cosmosDBDatabase) {
                 treeItems.push(new CosmosDBConnection(this, cosmosDBDatabase, key));
