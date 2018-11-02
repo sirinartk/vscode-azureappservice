@@ -54,6 +54,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ext.tree = tree;
     context.subscriptions.push(tree);
     context.subscriptions.push(vscode.window.registerTreeDataProvider('azureAppService', tree));
+    const treeView = vscode.window.createTreeView('azureAppService', { treeDataProvider: tree });
 
     const fileEditor: FileEditor = new FileEditor();
     context.subscriptions.push(fileEditor);
@@ -319,7 +320,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerCommand('appService.AddCosmosDBConnection', addCosmosDBConnection);
     registerCommand('appService.AttachCosmosDBDatabase', attachCosmosDBDatabase);
     registerCommand('appService.RemoveCosmosDBConnection', removeCosmosDBConnection);
-    registerCommand('appService.RevealConnection', async (node: CosmosDBConnection) => {
+    registerCommand('appService.RevealConnectionInCosmosDB', async (node: CosmosDBConnection) => {
         const revealed = await ext.cosmosAPI.revealTreeItem(node.cosmosDBDatabase.treeItemId);
         if (!revealed) {
             const error: string = `Can't find this database in CosmosDB. Do you want to attach it?`;
@@ -330,6 +331,15 @@ export function activate(context: vscode.ExtensionContext): void {
                     throw new Error(node.cosmosDBDatabase.accountName);
                 }
             }
+        }
+    });
+
+    registerCommand('appService.RevealConnectionInAppSettings', async (node: CosmosDBConnection) => {
+        const nodeToReveal = await tree.findTreeItem(`${node.parent.parent.parent.appSettingsNode.fullId}/${node.appSettingKey}`);
+        // const nodeToReveal = await tree.findTreeItem(`${node.parent.parent.parent.appSettingsNode.fullId}/${node.appSettingKey}`);
+
+        if (nodeToReveal) {
+            await treeView.reveal(nodeToReveal);
         }
     });
 }
