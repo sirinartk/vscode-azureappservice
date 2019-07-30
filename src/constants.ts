@@ -19,7 +19,8 @@ export enum configurationSettings {
     deploySubpath = 'deploySubpath',
     advancedCreation = 'advancedCreation',
     defaultWebAppToDeploy = 'defaultWebAppToDeploy',
-    connections = 'connections'
+    connections = 'connections',
+    enableViewInFileExplorer = 'enableViewInFileExplorer'
 }
 
 export enum ScmType {

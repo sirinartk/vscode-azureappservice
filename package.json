@@ -29,6 +29,7 @@
     ],
     "preview": true,
     "activationEvents": [
+        "onCommand:appservice.openInFileExplorer",
         "onCommand:appService.CreateWebApp",
         "onCommand:appService.Refresh",
         "onCommand:appService.LoadMore",
@@ -72,6 +73,11 @@
     "main": "./main.js",
     "contributes": {
         "commands": [
+            {
+                "command": "appservice.openInFileExplorer",
+                "title": "File Share",
+                "category": "Azure Storage"
+            },
             {
                 "command": "appService.selectSubscriptions",
                 "title": "Select Subscriptions...",
@@ -892,6 +898,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Shows a warning that performance may drop when creating an app in an App Service Plan that has more than 3 web apps associated to it"
+                },
+                "appService.enableViewInFileExplorer": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable preview support for app service files in file explorer."
                 }
             }
         },

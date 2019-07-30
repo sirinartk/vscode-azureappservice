@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IncomingMessage } from 'http';
+import { workspace } from 'vscode';
 import { ISiteTreeRoot } from 'vscode-azureappservice';
-import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, GenericTreeItem } from 'vscode-azureextensionui';
+import { configurationSettings, extensionPrefix } from '../constants';
 import { getThemedIconPath, IThemedIconPath } from '../utils/pathUtils';
 import { FileTreeItem } from './FileTreeItem';
 import { LogStreamTreeItem } from './LogStreamTreeItem';
@@ -14,6 +16,8 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
     public static contextValue: string = 'folder';
     public readonly contextValue: string;
     public readonly childTypeLabel: string = 'files';
+
+    private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     constructor(parent: AzureParentTreeItem, readonly label: string, readonly folderPath: string, readonly subcontextValue?: string) {
         super(parent);
@@ -28,7 +32,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         return false;
     }
 
-    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<ISiteTreeRoot>[]> {
+    public async loadMoreChildrenImpl(_clearCache: boolean): Promise<(AzExtTreeItem)[]> {
         const httpResponse: kuduIncomingMessage = <kuduIncomingMessage>(await this.root.client.kudu.vfs.getItemWithHttpOperationResponse(this.folderPath)).response;
         // response contains a body with a JSON parseable string
         const fileList: kuduFile[] = <kuduFile[]>JSON.parse(httpResponse.body);
@@ -40,7 +44,7 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
             }
             return true;
         });
-        const children: AzureTreeItem<ISiteTreeRoot>[] = filteredList.map((file: kuduFile) => {
+        const children: AzExtTreeItem[] = filteredList.map((file: kuduFile) => {
             return file.mime === 'inode/directory' ?
                 // truncate the home of the path
                 // the substring starts at file.path.indexOf(home) because the path sometimes includes site/ or D:\
@@ -51,18 +55,31 @@ export class FolderTreeItem extends AzureParentTreeItem<ISiteTreeRoot> {
         if (this.contextValue === 'logFolder') {
             children.unshift(new LogStreamTreeItem(this));
         }
+        // tslint:disable-next-line: strict-boolean-expressions
+        if (workspace.getConfiguration(extensionPrefix).get(configurationSettings.enableViewInFileExplorer)) {
+            const ti = new GenericTreeItem(this, {
+                label: 'Open in File Explorer...',
+                commandId: 'appService.openInFileExplorer',
+                contextValue: 'openInFileExplorer'
+            });
+
+            ti.commandArgs = [this];
+
+            children.push(ti);
+        }
         return children;
     }
 
-    public compareChildrenImpl(ti1: AzureTreeItem<ISiteTreeRoot>, ti2: AzureTreeItem<ISiteTreeRoot>): number {
-        let result: number | undefined = instanceOfCompare(ti1, ti2, LogStreamTreeItem);
-
-        if (result === undefined) {
-            result = instanceOfCompare(ti1, ti2, FolderTreeItem);
+    public compareChildrenImpl(ti1: AzExtTreeItem, ti2: AzExtTreeItem): number {
+        if (ti1.label === this._openInFileExplorerString) {
+            return -1;
+        } else if (ti2.label === this._openInFileExplorerString) {
+            return 1;
         }
 
-        return result === undefined ? ti1.label.localeCompare(ti2.label) : result;
+        return ti1.label.localeCompare(ti2.label);
     }
+
 }
 
 // tslint:disable-next-line:no-any

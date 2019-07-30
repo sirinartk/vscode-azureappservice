@@ -6,6 +6,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import { commands } from 'vscode';
 import { AppSettingsTreeItem, AppSettingTreeItem, DeploymentsTreeItem, ISiteTreeRoot, registerAppServiceExtensionVariables, SiteClient, stopStreamingLogs } from 'vscode-azureappservice';
 import { AzExtTreeDataProvider, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, IAzureUserInput, openInPortal, registerCommand, registerEvent, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
@@ -32,11 +33,12 @@ import { showFile } from './commands/showFile';
 import { startSsh } from './commands/startSsh';
 import { startStreamingLogs } from './commands/startStreamingLogs';
 import { swapSlots } from './commands/swapSlots';
-import { showOutputChannelCommandId, toggleValueVisibilityCommandId } from './constants';
+import { configurationSettings, extensionPrefix, showOutputChannelCommandId, toggleValueVisibilityCommandId } from './constants';
 import { AzureAccountTreeItem } from './explorer/AzureAccountTreeItem';
 import { DeploymentSlotsNATreeItem, DeploymentSlotsTreeItem, ScaleUpTreeItem } from './explorer/DeploymentSlotsTreeItem';
 import { DeploymentSlotTreeItem } from './explorer/DeploymentSlotTreeItem';
 import { FileEditor } from './explorer/editors/FileEditor';
+import { ExplorerFS } from './explorer/ExplorerFS';
 import { FileTreeItem } from './explorer/FileTreeItem';
 import { FolderTreeItem } from './explorer/FolderTreeItem';
 import { LoadedScriptsProvider, openScript } from './explorer/loadedScriptsExplorer';
@@ -105,6 +107,17 @@ export async function activateInternal(
 
         LogpointsCollection.TextEditorDecorationType = logpointDecorationType;
 
+        // tslint:disable-next-line: strict-boolean-expressions
+        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettings.enableViewInFileExplorer)) {
+            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azureappservice', new ExplorerFS(), { isCaseSensitive: true }));
+        }
+        registerCommand('appService.openInFileExplorer', async (_actionContext: IActionContext, treeItem: FolderTreeItem) => {
+            await callWithTelemetryAndErrorHandling('appservice.openInFileExplorer', async () => {
+                // tslint:disable-next-line: prefer-template
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azureappservice://' + treeItem.folderPath));
+                await commands.executeCommand('workbench.view.explorer');
+            });
+        });
         registerCommand('appService.Refresh', async (_actionContext: IActionContext, node?: AzureTreeItem) => await ext.tree.refresh(node));
         registerCommand('appService.selectSubscriptions', () => vscode.commands.executeCommand("azure-account.selectSubscriptions"));
         registerCommand('appService.LoadMore', async (actionContext: IActionContext, node: AzureTreeItem) => await ext.tree.loadMore(node, actionContext));
