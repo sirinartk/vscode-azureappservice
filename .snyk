@@ -1,0 +1,68 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.14.1
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-567746:
+    - request-promise > request-promise-core > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > html-to-text > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - azure-arm-resource > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - azure-arm-website > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > request-promise > request-promise-core > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > archiver > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > html-to-text > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - azure-arm-resource > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - azure-arm-website > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > azure-arm-resource > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-resource > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-website > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-appinsights > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > azure-arm-storage > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-storage > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > azure-arm-resource > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-resource > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-website > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-appinsights > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureextensionui > azure-arm-storage > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > azure-arm-storage > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > azure-arm-resource > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > azure-arm-storage > ms-rest-azure > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > azure-arm-resource > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
+    - vscode-azureappservice > vscode-azureextensionui > azure-arm-storage > ms-rest-azure > adal-node > async > lodash:
+        patched: '2020-05-01T06:40:34.434Z'
