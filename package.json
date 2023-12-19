@@ -877,9 +877,9 @@
         "fs-extra": "^4.0.2",
         "portfinder": "^1.0.13",
         "request-promise": "^4.2.2",
-        "vscode-azureappservice": "^0.52.0",
+        "vscode-azureappservice": "^0.87.0",
         "vscode-azureextensionui": "^0.28.3",
-        "vscode-azurekudu": "^0.1.8",
+        "vscode-azurekudu": "^0.2.0",
         "vscode-nls": "^4.1.1"
     },
     "extensionDependencies": [
